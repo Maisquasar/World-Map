@@ -11,8 +11,13 @@ public class SceneController : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == "Main")
             PlayerPrefs.DeleteAll();
-
     }
+
+    public void Quit()
+    {
+        Application.Quit();
+    }
+
 
     public void Return()
     {

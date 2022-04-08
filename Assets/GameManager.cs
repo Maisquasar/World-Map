@@ -86,6 +86,7 @@ public class GameManager : MonoBehaviour
         sizeAtStart = countryToFind.Count;
         NewQuestion();
     }
+
     public void NewQuestion()
     {
         index = Random.Range(0, countryToFind.Count - 1);
@@ -98,9 +99,7 @@ public class GameManager : MonoBehaviour
                 questionText.text = countryToFind[index].Capitale;
                 break;
             case "Flag":
-                Texture2D tmp = (Texture2D)AssetDatabase.LoadAssetAtPath($"Assets/Flags/{countryToFind[index].Iso}.png", typeof(Texture2D));
-                if (tmp == null)
-                    Debug.LogWarning($"Flag Assets/Flags/{countryToFind[index].Iso}.png not found");
+                Texture2D tmp = LoadPNG($"Assets/Flags/{countryToFind[index].Iso}.png");
                 if (countryToFind[index].Flag == null)
                     countryToFind[index].Flag = tmp;
                 questionImage.sprite = Sprite.Create(countryToFind[index].Flag, new Rect(0, 0, countryToFind[index].Flag.width, countryToFind[index].Flag.height), new Vector2(0.5f, 0.5f));
@@ -134,45 +133,6 @@ public class GameManager : MonoBehaviour
     public void ShowAnswer()
     {
         AnswerText.enabled = !AnswerText.enabled;
-    }
-
-    public static double DiceCoefficient(string strA, string strB)
-    {
-        strA = RemoveDiacritics(strA.ToLower());
-        strB = RemoveDiacritics(strB.ToLower());
-        HashSet<string> setA = new HashSet<string>();
-        HashSet<string> setB = new HashSet<string>();
-
-        for (int i = 0; i < strA.Length - 1; ++i)
-            setA.Add(strA.Substring(i, 2));
-
-        for (int i = 0; i < strB.Length - 1; ++i)
-            setB.Add(strB.Substring(i, 2));
-
-        HashSet<string> intersection = new HashSet<string>(setA);
-        intersection.IntersectWith(setB);
-
-        return (2.0 * intersection.Count) / (setA.Count + setB.Count);
-    }
-
-    static string RemoveDiacritics(string text)
-    {
-        var normalizedString = text.Normalize(NormalizationForm.FormD);
-        var stringBuilder = new StringBuilder(capacity: normalizedString.Length);
-
-        for (int i = 0; i < normalizedString.Length; i++)
-        {
-            char c = normalizedString[i];
-            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-            {
-                stringBuilder.Append(c);
-            }
-        }
-
-        return stringBuilder
-            .ToString()
-            .Normalize(NormalizationForm.FormC);
     }
 
     bool endOfGoodAnswer = true;
@@ -215,4 +175,68 @@ public class GameManager : MonoBehaviour
         }
         endOfGoodAnswer = true;
     }
+
+    #region LoadPNG
+
+    private static Texture2D LoadPNG(string filePath)
+    {
+        Texture2D tex = null;
+        byte[] fileData;
+
+        if (System.IO.File.Exists(filePath))
+        {
+            fileData = System.IO.File.ReadAllBytes(filePath);
+            tex = new Texture2D(2, 2);
+            tex.LoadImage(fileData);
+        }
+        if (tex == null)
+            Debug.LogWarning($"{filePath} not found");
+        return tex;
+    }
+    #endregion
+
+    #region Check Algorithm
+
+    public static double DiceCoefficient(string strA, string strB)
+    {
+        strA = RemoveDiacritics(strA.ToLower());
+        strB = RemoveDiacritics(strB.ToLower());
+        HashSet<string> setA = new HashSet<string>();
+        HashSet<string> setB = new HashSet<string>();
+
+        for (int i = 0; i < strA.Length - 1; ++i)
+            setA.Add(strA.Substring(i, 2));
+
+        for (int i = 0; i < strB.Length - 1; ++i)
+            setB.Add(strB.Substring(i, 2));
+
+        HashSet<string> intersection = new HashSet<string>(setA);
+        intersection.IntersectWith(setB);
+
+        return (2.0 * intersection.Count) / (setA.Count + setB.Count);
+    }
+
+    static string RemoveDiacritics(string text)
+    {
+        var normalizedString = text.Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder(capacity: normalizedString.Length);
+
+        for (int i = 0; i < normalizedString.Length; i++)
+        {
+            char c = normalizedString[i];
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+            {
+                stringBuilder.Append(c);
+            }
+        }
+
+        return stringBuilder
+            .ToString()
+            .Normalize(NormalizationForm.FormC);
+    }
+
+    #endregion
 }
+
+
